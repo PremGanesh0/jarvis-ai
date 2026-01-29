@@ -1,6 +1,6 @@
 package com.jarvis.feature.chat
 
-import com.jarvis.coremodel.ChatMessage
+import com.jarvis.core.model.ChatMessage
 
 /**
  * UI state for the chat screen.

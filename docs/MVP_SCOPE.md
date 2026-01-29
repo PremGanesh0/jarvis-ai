@@ -258,10 +258,10 @@ data class DailyMetricsEntity(
 interface LLMProvider {
     val isLoaded: StateFlow<Boolean>
     val loadingProgress: StateFlow<Float>
-    
+
     suspend fun load(modelPath: String)
     suspend fun unload()
-    
+
     fun generateStream(
         prompt: String,
         systemPrompt: String
@@ -279,8 +279,8 @@ You are JARVIS, a helpful AI assistant. You learn from every conversation.
 ${learnings.preferences.joinToString("\n") { "- ${it.key}: ${it.value}" }}
 
 ## Important Corrections (Never repeat these mistakes)
-${learnings.corrections.joinToString("\n") { 
-    "- ❌ Don't say: \"${it.wrong}\"\n  ✅ Say instead: \"${it.correct}\"" 
+${learnings.corrections.joinToString("\n") {
+    "- ❌ Don't say: \"${it.wrong}\"\n  ✅ Say instead: \"${it.correct}\""
 }}
 
 ## Your Personality

@@ -38,7 +38,7 @@ class LearningRepositoryImpl(
         val corrections = correctionDao.getRecentCorrections(correctionLimit)
             .map { it.toDomain() }
         val preferences = preferenceDao.getAllPreferences()
-        
+
         // Calculate days since first use (simplified for POC)
         val daysSinceStart = 1 // TODO: Calculate from first message date
 

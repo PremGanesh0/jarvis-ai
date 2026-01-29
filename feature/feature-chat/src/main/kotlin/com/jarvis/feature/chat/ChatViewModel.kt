@@ -2,9 +2,8 @@ package com.jarvis.feature.chat
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jarvis.coremodel.ChatMessage
-import com.jarvis.coremodel.Correction
-import com.jarvis.coremodel.MessageRole
+import com.jarvis.core.model.ChatMessage
+import com.jarvis.core.model.MessageRole
 import com.jarvis.domain.usecase.SaveCorrectionUseCase
 import com.jarvis.domain.usecase.SendMessageUseCase
 import com.jarvis.learning.LearningEngine
@@ -60,7 +59,6 @@ class ChatViewModel(
             role = MessageRole.USER,
             content = text,
             timestamp = System.currentTimeMillis(),
-            conversationId = conversationId,
         )
 
         _uiState.update {
@@ -81,7 +79,6 @@ class ChatViewModel(
                     role = MessageRole.ASSISTANT,
                     content = _uiState.value.streamingText,
                     timestamp = System.currentTimeMillis(),
-                    conversationId = conversationId,
                 )
 
                 _uiState.update {
@@ -129,18 +126,12 @@ class ChatViewModel(
 
         viewModelScope.launch {
             try {
-                val correction = Correction(
-                    id = UUID.randomUUID().toString(),
+                // Use the updated SaveCorrectionUseCase signature
+                saveCorrectionUseCase(
                     originalResponse = correctionMode.originalResponse,
                     correctedResponse = correctedText,
-                    timestamp = System.currentTimeMillis(),
-                    category = "user_correction",
-                    priority = 1.0f, // User corrections are high priority
-                    conversationId = conversationId,
-                    messageId = correctionMode.originalMessageId,
+                    context = "conversation:$conversationId,message:${correctionMode.originalMessageId}",
                 )
-
-                saveCorrectionUseCase(correction)
 
                 // Update the message in the list
                 _uiState.update { state ->

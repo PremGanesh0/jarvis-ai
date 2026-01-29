@@ -325,7 +325,7 @@ Solution: Use smaller quantization
 ### Issue: AccessibilityService not working
 
 ```
-Solution: 
+Solution:
 1. Grant permission in Settings → Accessibility → JARVIS
 2. Restart the app after granting
 3. Check logcat for errors

@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.flow
 
 /**
  * FAKE LLM Provider for POC testing
- * 
+ *
  * This simulates LLM responses before we integrate llama.cpp.
  * Replace with real LlamaLLMProvider when native integration is ready.
  */
@@ -30,13 +30,13 @@ class FakeLLMProvider : LLMProvider {
 
     override suspend fun load(modelPath: String) {
         _loadingProgress.value = 0f
-        
+
         // Simulate loading progress
         for (i in 1..10) {
             delay(200)
             _loadingProgress.value = i / 10f
         }
-        
+
         _modelInfo = ModelInfo(
             name = "FakeLLM (POC)",
             sizeBytes = 0,
@@ -53,10 +53,10 @@ class FakeLLMProvider : LLMProvider {
 
     override fun generateStream(prompt: String, systemPrompt: String): Flow<String> = flow {
         isCancelled = false
-        
+
         // Parse the prompt to give contextual responses
         val response = generateFakeResponse(prompt, systemPrompt)
-        
+
         // Stream word by word
         val words = response.split(" ")
         for (word in words) {
@@ -72,30 +72,30 @@ class FakeLLMProvider : LLMProvider {
 
     private fun generateFakeResponse(prompt: String, systemPrompt: String): String {
         val lowerPrompt = prompt.lowercase()
-        
+
         // Check for corrections in system prompt
         val hasCorrections = systemPrompt.contains("Corrections")
-        
+
         return when {
-            "hello" in lowerPrompt || "hi" in lowerPrompt -> 
+            "hello" in lowerPrompt || "hi" in lowerPrompt ->
                 "Hello! I'm JARVIS, your AI assistant. How can I help you today?"
-            
-            "how are you" in lowerPrompt -> 
+
+            "how are you" in lowerPrompt ->
                 "I'm functioning optimally, thank you for asking! How are you doing?"
-            
-            "what can you do" in lowerPrompt -> 
+
+            "what can you do" in lowerPrompt ->
                 "I'm a proof-of-concept AI assistant. Right now I can chat with you and learn from corrections. More capabilities coming soon!"
-            
-            "test" in lowerPrompt -> 
+
+            "test" in lowerPrompt ->
                 "Test received! The system is working. I'm currently in POC mode - using fake responses until llama.cpp is integrated."
-            
+
             "learn" in lowerPrompt || "remember" in lowerPrompt ->
                 "I learn from our conversations! When you correct me, I store that feedback and use it to improve future responses."
-            
+
             hasCorrections && "prefer" in lowerPrompt ->
                 "I see you have some preferences! I'll do my best to follow them. You can always correct me if I make mistakes."
-            
-            else -> 
+
+            else ->
                 "I understand you said: \"$prompt\". This is a POC response - real LLM integration coming soon! Feel free to correct me by editing my responses."
         }
     }

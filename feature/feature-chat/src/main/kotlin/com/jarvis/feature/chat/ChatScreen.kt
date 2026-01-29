@@ -34,9 +34,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.jarvis.coremodel.ChatMessage
-import com.jarvis.coremodel.MessageRole
-import org.koin.compose.viewmodel.koinViewModel
+import com.jarvis.core.model.ChatMessage
+import com.jarvis.core.model.MessageRole
+import org.koin.androidx.compose.koinViewModel
 
 /**
  * Main chat screen composable.
@@ -122,7 +122,6 @@ fun ChatScreen(
                                 role = MessageRole.ASSISTANT,
                                 content = uiState.streamingText + "▌",
                                 timestamp = System.currentTimeMillis(),
-                                conversationId = "",
                             ),
                             onLongClick = {},
                         )

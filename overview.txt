@@ -1,0 +1,51 @@
+Overview
+J.A.R.V.I.S. (Just A Rather Very Intelligent System) is a fully offline, privacy-first AI personal assistant for Android, inspired by Iron Man's AI companion.
+
+🎯 Core Vision: Self-Improving AI
+JARVIS learns from every conversation and gets smarter every day:
+- Day 1: Makes mistakes, learns your basics (~60% accuracy)
+- Week 1: Understands patterns, fewer errors (~70% accuracy)
+- Month 1: Anticipates needs, rarely wrong (~80% accuracy)
+- Month 6: Knows you deeply, highly accurate (~95% accuracy)
+- Year 1+: Like a lifelong companion (~98% accuracy)
+
+Key Principle: Every correction makes JARVIS smarter. Every conversation adds knowledge. Accuracy grows continuously without app updates.
+
+Key Features
+🔒 Privacy-First
+100% on-device processing - no cloud, no internet required
+All data encrypted locally with AES-256
+Open source and transparent
+
+🧠 Learns From Mistakes
+Stores corrections with highest priority - never repeats errors
+Extracts preferences from every conversation
+Recognizes patterns and anticipates needs
+Accuracy improves daily without model retraining
+The longer you use it, the smarter it gets
+
+👤 Living Avatar
+Photorealistic or stylized avatar that ages with you over years
+Emotional expressions (happy, concerned, thoughtful, excited)
+Customizable appearance (mirror mode or custom design)
+💝 Emotional Intelligence
+Mood detection via typing patterns, app usage, voice tone
+Relationship levels that evolve: Acquaintance → Assistant → Companion → Confidant → Lifelong Partner
+Remembers milestones, birthdays, and past conversations
+🧠 Technical Stack
+LLM: Phi-3 Mini (3.8B params, quantized to 4-bit ~2.3GB)
+Speech-to-Text: Whisper.cpp (offline)
+Text-to-Speech: Piper TTS
+Vector DB: sqlite-vec with all-MiniLM-L6-v2 embeddings
+Platform: Android 10+ with Kotlin + Jetpack Compose
+⚡ Capabilities
+Full device control (volume, brightness, WiFi, Bluetooth, etc.)
+App control via Accessibility Service
+Send SMS, make calls, set calendar events
+Automation workflows and contextual actions
+Deep device awareness (battery, storage, sensors, location, etc.)
+📅 Development Roadmap
+16-week plan across 8 phases: Foundation → Data Collection → Knowledge Base → Action Engine → Avatar System → Personality → Voice → Polish
+
+📱 Requirements
+Android 10+, 6GB+ RAM, 8GB+ storage, Snapdragon 6xx+

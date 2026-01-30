@@ -845,6 +845,42 @@ You: "I'm feeling stressed"
 
 ---
 
+## 📚 Documentation
+
+Comprehensive guides for building and understanding JARVIS:
+
+### 🤖 AI Model Management
+- **[Model Management Guide](docs/MODEL_MANAGEMENT.md)** - Complete guide for selecting, downloading, and managing AI models
+  - Which models to use (with exact versions)
+  - Where to download from (with direct links)
+  - Storage architecture for easy model swapping
+  - Memory management strategies
+  - Size comparison tables and troubleshooting
+
+- **[Model Formats Specification](docs/MODEL_FORMATS.md)** - Technical deep dive into GGUF, ONNX, and GGML formats
+  - Binary structure and quantization techniques
+  - Performance optimization strategies
+  - Implementation guidelines
+
+### 🛠️ Development
+- **[Development Setup](docs/DEVELOPMENT_SETUP.md)** - Environment setup and project structure
+- **[Technology Stack](docs/TECH_STACK.md)** - Detailed tech stack decisions
+- **[Project Decisions](docs/PROJECT_DECISIONS.md)** - Architectural decisions and rationale
+- **[MVP Scope](docs/MVP_SCOPE.md)** - Minimum viable product definition
+- **[Open Source References](docs/OPEN_SOURCE_REFERENCES.md)** - Projects to learn from
+
+### 🎯 Quick Links
+| Question | Documentation |
+|----------|---------------|
+| *"Which LLM model should I use?"* | [Model Management → Recommended Models](docs/MODEL_MANAGEMENT.md#recommended-models) |
+| *"How do I download models?"* | [Model Management → Download Instructions](docs/MODEL_MANAGEMENT.md#download-instructions) |
+| *"How do I swap models?"* | [Model Management → Model Swapping Guide](docs/MODEL_MANAGEMENT.md#model-swapping-guide) |
+| *"What is GGUF format?"* | [Model Formats → GGUF Format](docs/MODEL_FORMATS.md#gguf-format-llm) |
+| *"How to manage memory?"* | [Model Management → Memory Management](docs/MODEL_MANAGEMENT.md#memory-management) |
+| *"What size models exist?"* | [Model Management → Size Comparison](docs/MODEL_MANAGEMENT.md#size-comparison-tables) |
+
+---
+
 ## 🤝 Contributing
 
 This is a personal project, but contributions are welcome!

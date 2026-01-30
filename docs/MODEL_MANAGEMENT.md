@@ -906,7 +906,7 @@ ls -lh model.gguf
 
 1. **Verify checksum**
 ```bash
-# Download checksum from HuggingFace
+# Download checksum from Hugging Face
 sha256sum Phi-3.5-mini-instruct-Q4_K_M.gguf
 
 # Compare with official checksum
@@ -950,7 +950,7 @@ E/JARVIS: Incompatible model version
 
 3. **Use compatible model version**
 ```bash
-# Download latest model version from HuggingFace
+# Download latest model version from Hugging Face
 # Check model card for compatibility notes
 ```
 

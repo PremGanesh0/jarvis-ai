@@ -9,6 +9,10 @@ android {
 
     defaultConfig {
         minSdk = 29
+
+        ndk {
+            abiFilters += listOf("arm64-v8a", "x86_64")
+        }
     }
 
     compileOptions {
@@ -28,4 +32,7 @@ dependencies {
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.koin.android)
+
+    // MediaPipe LLM Inference API - Official Google Android LLM support
+    implementation("com.google.mediapipe:tasks-genai:0.10.27")
 }

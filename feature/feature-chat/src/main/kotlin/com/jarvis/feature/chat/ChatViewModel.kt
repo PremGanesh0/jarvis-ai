@@ -1,7 +1,12 @@
 package com.jarvis.feature.chat
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jarvis.ai.core.LLMProvider
+import com.jarvis.ai.llama.DownloadState
+import com.jarvis.ai.llama.ModelManager
+import com.jarvis.ai.llama.di.USE_REAL_LLM
 import com.jarvis.core.model.ChatMessage
 import com.jarvis.core.model.MessageRole
 import com.jarvis.domain.usecase.SaveCorrectionUseCase
@@ -16,14 +21,18 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
 
+private const val TAG = "ChatViewModel"
+
 /**
  * ViewModel for the chat screen.
- * Handles user input, message sending, and correction flow.
+ * Handles model loading, chat, and correction flow.
  */
 class ChatViewModel(
     private val sendMessageUseCase: SendMessageUseCase,
     private val saveCorrectionUseCase: SaveCorrectionUseCase,
     private val learningEngine: LearningEngine,
+    private val llmProvider: LLMProvider,
+    private val modelManager: ModelManager,
 ) : ViewModel() {
 
     private val conversationId = UUID.randomUUID().toString()
@@ -34,6 +43,105 @@ class ChatViewModel(
     private val _events = Channel<ChatEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
+    init {
+        Log.d(TAG, "ChatViewModel init - checking model status, useRealLLM=$USE_REAL_LLM")
+        checkModelStatus()
+        observeModelState()
+    }
+
+    private fun checkModelStatus() {
+        viewModelScope.launch {
+            // For fake LLM, skip model file check and load immediately
+            if (!USE_REAL_LLM) {
+                Log.d(TAG, "Using fake LLM - loading immediately")
+                loadModel()
+                return@launch
+            }
+
+            val isAvailable = modelManager.isModelAvailable()
+            Log.d(TAG, "Model available: $isAvailable")
+            if (isAvailable) {
+                loadModel()
+            } else {
+                Log.d(TAG, "Model needs download")
+                _uiState.update { it.copy(modelState = ModelState.NeedsDownload) }
+            }
+        }
+    }
+
+    private fun observeModelState() {
+        viewModelScope.launch {
+            llmProvider.isLoaded.collect { isLoaded ->
+                Log.d(TAG, "Model isLoaded: $isLoaded")
+                if (isLoaded) {
+                    _uiState.update { it.copy(modelState = ModelState.Ready) }
+                    _events.send(ChatEvent.ModelReady)
+                }
+            }
+        }
+        viewModelScope.launch {
+            llmProvider.loadingProgress.collect { progress ->
+                Log.d(TAG, "Model loading progress: $progress")
+                _uiState.update { it.copy(modelLoadProgress = progress) }
+            }
+        }
+    }
+
+    private fun loadModel() {
+        viewModelScope.launch {
+            try {
+                Log.d(TAG, "Starting model load...")
+                _uiState.update { it.copy(modelState = ModelState.Loading) }
+
+                // For fake LLM, we don't need a real model path
+                val modelPath = if (USE_REAL_LLM) {
+                    modelManager.getModelPath()
+                } else {
+                    "fake://model"
+                }
+                Log.d(TAG, "Model path: $modelPath")
+                llmProvider.load(modelPath)
+                Log.d(TAG, "Model load call completed")
+            } catch (e: Exception) {
+                Log.e(TAG, "Model load failed", e)
+                _uiState.update {
+                    it.copy(modelState = ModelState.Error(e.message ?: "Failed to load model"))
+                }
+            }
+        }
+    }
+
+    fun onDownloadModel() {
+        viewModelScope.launch {
+            Log.d(TAG, "Starting model download...")
+            _uiState.update { it.copy(isDownloading = true, downloadProgress = 0f) }
+
+            modelManager.downloadModel().collect { state ->
+                Log.d(TAG, "Download state: $state")
+                when (state) {
+                    is DownloadState.Starting -> {
+                        _uiState.update { it.copy(downloadProgress = 0f) }
+                    }
+                    is DownloadState.Progress -> {
+                        _uiState.update { it.copy(downloadProgress = state.progress) }
+                    }
+                    is DownloadState.Completed -> {
+                        _uiState.update { it.copy(isDownloading = false) }
+                        loadModel()
+                    }
+                    is DownloadState.Failed -> {
+                        _uiState.update {
+                            it.copy(
+                                isDownloading = false,
+                                modelState = ModelState.Error(state.error),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fun onInputChanged(text: String) {
         _uiState.update { it.copy(inputText = text) }
     }
@@ -41,6 +149,7 @@ class ChatViewModel(
     fun onSendMessage() {
         val text = _uiState.value.inputText.trim()
         if (text.isEmpty() || _uiState.value.isLoading) return
+        if (_uiState.value.modelState != ModelState.Ready) return
 
         // Clear input and set loading
         _uiState.update {
@@ -167,5 +276,13 @@ class ChatViewModel(
 
     fun onDismissError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    fun onRetryLoadModel() {
+        if (modelManager.isModelAvailable()) {
+            loadModel()
+        } else {
+            _uiState.update { it.copy(modelState = ModelState.NeedsDownload) }
+        }
     }
 }

@@ -31,6 +31,8 @@ dependencies {
     implementation(project(":core:core-model"))
     implementation(project(":domain"))
     implementation(project(":learning"))
+    implementation(project(":ai:ai-core"))
+    implementation(project(":ai:ai-llama"))
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.koin.android)

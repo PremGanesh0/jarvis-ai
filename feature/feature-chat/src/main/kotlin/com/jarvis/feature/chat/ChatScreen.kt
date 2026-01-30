@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,6 +19,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -32,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jarvis.core.model.ChatMessage
@@ -40,7 +43,6 @@ import org.koin.androidx.compose.koinViewModel
 
 /**
  * Main chat screen composable.
- * POC: Minimal functional UI - no decorations.
  */
 @Composable
 fun ChatScreen(
@@ -65,6 +67,9 @@ fun ChatScreen(
                 is ChatEvent.CorrectionSaved -> {
                     snackbarHostState.showSnackbar("Correction saved! I'll learn from this.")
                 }
+                is ChatEvent.ModelReady -> {
+                    snackbarHostState.showSnackbar("Model loaded! Ready to chat.")
+                }
             }
         }
     }
@@ -84,11 +89,46 @@ fun ChatScreen(
                     .background(MaterialTheme.colorScheme.primary)
                     .padding(16.dp),
             ) {
-                Text(
-                    text = "J.A.R.V.I.S. POC",
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    style = MaterialTheme.typography.titleLarge,
-                )
+                Column {
+                    Text(
+                        text = "J.A.R.V.I.S.",
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                    // Model status
+                    Text(
+                        text = when (uiState.modelState) {
+                            is ModelState.Ready -> "● Ready"
+                            is ModelState.Loading -> "◐ Loading model..."
+                            is ModelState.NeedsDownload -> "○ Model not downloaded"
+                            is ModelState.NotLoaded -> "○ Initializing..."
+                            is ModelState.Error -> "✕ Error"
+                        },
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
+
+            // Show model loading/download UI if needed
+            when (val modelState = uiState.modelState) {
+                is ModelState.NeedsDownload -> {
+                    ModelDownloadCard(
+                        isDownloading = uiState.isDownloading,
+                        progress = uiState.downloadProgress,
+                        onDownloadClick = viewModel::onDownloadModel,
+                    )
+                }
+                is ModelState.Loading -> {
+                    ModelLoadingCard(progress = uiState.modelLoadProgress)
+                }
+                is ModelState.Error -> {
+                    ModelErrorCard(
+                        error = modelState.message,
+                        onRetry = viewModel::onRetryLoadModel,
+                    )
+                }
+                else -> { /* Ready or NotLoaded - show chat */ }
             }
 
             // Messages list
@@ -161,18 +201,22 @@ fun ChatScreen(
                         Text(
                             if (uiState.correctionMode != null) {
                                 "Edit the response..."
+                            } else if (uiState.modelState != ModelState.Ready) {
+                                "Waiting for model..."
                             } else {
                                 "Type a message..."
                             }
                         )
                     },
-                    enabled = !uiState.isLoading,
+                    enabled = !uiState.isLoading && uiState.modelState == ModelState.Ready,
                     maxLines = 4,
                 )
 
                 if (uiState.isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.padding(start = 8.dp),
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .size(36.dp),
                     )
                 } else if (uiState.correctionMode != null) {
                     Column(modifier = Modifier.padding(start = 8.dp)) {
@@ -187,12 +231,103 @@ fun ChatScreen(
                     Button(
                         onClick = viewModel::onSendMessage,
                         modifier = Modifier.padding(start = 8.dp),
-                        enabled = uiState.inputText.isNotBlank(),
+                        enabled = uiState.inputText.isNotBlank() && uiState.modelState == ModelState.Ready,
                     ) {
                         Text("Send")
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ModelDownloadCard(
+    isDownloading: Boolean,
+    progress: Float,
+    onDownloadClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = "📥 AI Model Required",
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Download Phi-3-mini (~2.2 GB) for on-device AI",
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (isDownloading) {
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "${(progress * 100).toInt()}% downloaded",
+                style = MaterialTheme.typography.bodySmall,
+            )
+        } else {
+            Button(onClick = onDownloadClick) {
+                Text("Download Model")
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModelLoadingCard(progress: Float) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        CircularProgressIndicator()
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Loading model... ${(progress * 100).toInt()}%",
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
+}
+
+@Composable
+private fun ModelErrorCard(
+    error: String,
+    onRetry: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.errorContainer)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = "❌ Model Error",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onErrorContainer,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = error,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onErrorContainer,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = onRetry) {
+            Text("Retry")
         }
     }
 }
